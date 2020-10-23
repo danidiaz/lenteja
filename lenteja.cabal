@@ -1,0 +1,18 @@
+cabal-version:       3.0
+
+name:                lenteja
+version:             0.1.0.0
+license-file:        LICENSE
+author:              Daniel Diaz
+maintainer:          diaz.carrete@facebook.com
+build-type:          Simple
+extra-source-files:  CHANGELOG.md
+
+executable lenteja
+  main-is:             Main.hs
+  build-depends:       
+    base >=4.14 && <4.15,
+    lens,
+    transformers,
+    text
+  default-language:    Haskell2010
