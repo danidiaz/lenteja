@@ -29,5 +29,6 @@ executable lenteja
     transformers,
     text,
     containers,
+    generic-lens,
     lenteja
   default-language:    Haskell2010
