@@ -8,11 +8,26 @@ maintainer:          diaz.carrete@facebook.com
 build-type:          Simple
 extra-source-files:  CHANGELOG.md
 
+library
+   hs-source-dirs:
+    src
+   exposed-modules:
+    Lenteja
+   build-depends:
+    base >=4.14 && <4.15,
+    lens,
+    transformers,
+    text,
+    containers
+  default-language:    Haskell2010
+
 executable lenteja
   main-is:             Main.hs
   build-depends:       
     base >=4.14 && <4.15,
     lens,
     transformers,
-    text
+    text,
+    containers,
+    lenteja
   default-language:    Haskell2010
