@@ -18,7 +18,6 @@ import Lenteja
       Lenteja(LentejaFold, LentejaGetter),
       inspect )
 import Lenteja.Parser ( parseLensyExp )
-import Type.Reflection ( typeRep )
 import Control.Exception ( throwIO )
 import Data.Foldable (traverse_)
 import Data.Data (Proxy(Proxy))
@@ -35,10 +34,10 @@ data Person = Person
 instance HasLentejas Person where
   lentejas =
     Map.fromList
-      [ ("age", SomeLentejaFrom typeRep (LentejaGetter (Getter (field @"age")))),
-        ("name", SomeLentejaFrom typeRep (LentejaGetter (Getter (field @"name")))),
-        ("pets", SomeLentejaFrom typeRep (LentejaGetter (Getter (field @"pets")))),
-        ("partner", SomeLentejaFrom typeRep (LentejaGetter (Getter (field @"partner"))))
+      [ ("age", SomeLentejaFrom (LentejaGetter (Getter (field @"age")))),
+        ("name", SomeLentejaFrom (LentejaGetter (Getter (field @"name")))),
+        ("pets", SomeLentejaFrom (LentejaGetter (Getter (field @"pets")))),
+        ("partner", SomeLentejaFrom  (LentejaGetter (Getter (field @"partner"))))
       ]
 
 data Pet = Pet
@@ -50,8 +49,8 @@ data Pet = Pet
 instance HasLentejas Pet where
   lentejas =
     Map.fromList
-      [ ("petName", SomeLentejaFrom typeRep (LentejaGetter (Getter (field @"petName")))),
-        ("petAge", SomeLentejaFrom typeRep (LentejaGetter (Getter (field @"petAge"))))
+      [ ("petName", SomeLentejaFrom  (LentejaGetter (Getter (field @"petName")))),
+        ("petAge", SomeLentejaFrom  (LentejaGetter (Getter (field @"petAge"))))
       ]
 
 it :: Person

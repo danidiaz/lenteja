@@ -19,17 +19,16 @@ import Data.List.NonEmpty ()
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
 import Data.Text (Text)
-import Type.Reflection ( Typeable, TypeRep, typeRep )
 
 data Lenteja a b
   = LentejaGetter (ReifiedGetter a b)
   | LentejaFold (ReifiedFold a b)
 
 data SomeLentejaFrom a where
-  SomeLentejaFrom :: (Show b, HasLentejas b) => TypeRep b -> Lenteja a b -> SomeLentejaFrom a
+  SomeLentejaFrom :: (Show b, HasLentejas b) => Lenteja a b -> SomeLentejaFrom a
 
 data SomeLenteja where
-  SomeLenteja :: (Show a, HasLentejas b) => TypeRep a -> SomeLentejaFrom a -> SomeLenteja
+  SomeLenteja :: (Show a, HasLentejas b) => SomeLentejaFrom a -> SomeLenteja
 
 type HasLentejas :: Type -> Constraint
 class HasLentejas t where
@@ -41,8 +40,8 @@ instance HasLentejas Int where
 instance HasLentejas Text where
   lentejas = Map.empty
 
-instance (Show a, HasLentejas a, Typeable a) => HasLentejas [a] where
-  lentejas = Map.fromList [("folded", SomeLentejaFrom (typeRep @a) (LentejaFold (Fold folded)))]
+instance (Show a, HasLentejas a) => HasLentejas [a] where
+  lentejas = Map.fromList [("folded", SomeLentejaFrom (LentejaFold (Fold folded)))]
 
 data LentejaResult a
   = SingleResult a
@@ -59,7 +58,7 @@ inspect _ (opticName : names) =
   case Map.lookup opticName (lentejas @a) of
     Nothing ->
       Left (OpticNotFound opticName)
-    Just (SomeLentejaFrom rep lenteja) ->
+    Just (SomeLentejaFrom lenteja) ->
       case inspect lenteja names of
         Left err -> 
           Left err
