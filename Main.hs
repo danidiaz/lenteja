@@ -10,11 +10,11 @@ import Control.Lens
 import Data.Generics.Product.Fields (field)
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
-import Data.Text (pack, Text)
+import Data.Text (Text, pack)
 import GHC.Generics
 import Lenteja
-import Type.Reflection
 import Lenteja.Parser
+import Type.Reflection
 
 data Person = Person
   { age :: Int,

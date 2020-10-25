@@ -3,19 +3,19 @@
 {-# LANGUAGE GADTSyntax #-}
 {-# LANGUAGE ImportQualifiedPost #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE StandaloneKindSignatures #-}
 {-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 
 module Lenteja where
 
+import Control.Lens
 import Control.Lens (ReifiedFold, ReifiedLens')
 import Data.Kind (Constraint, Type)
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
 import Data.Text (Text)
-import Type.Reflection 
-import Control.Lens
+import Type.Reflection
 
 data Lenteja a b
   = LentejaLens (ReifiedLens' a b)
@@ -40,4 +40,9 @@ instance HasLentejas Text where
 instance (Show a, HasLentejas a, Typeable a) => HasLentejas [a] where
   lentejas = Map.fromList [("folded", SomeLentejaFrom (typeRep @a) (LentejaFold (Fold folded)))]
 
+data OpticResult a
+  = SingleResult a
+  | MultipleResults [a]
 
+inspect :: HasLentejas a => [Text] -> a -> OpticResult String
+inspect [] = undefined

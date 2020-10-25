@@ -17,20 +17,19 @@ import Data.Void
 import Data.Text (Text)
 import Control.Exception (throwIO)
 import Data.Char
-
-data Pair a = Pair a a deriving (Functor, Show)
+import Data.List.NonEmpty
 
 type Parser = Parsec Void Text
 
-parseLensyExp :: Text -> IO [Text]
+parseLensyExp :: Text -> IO (NonEmpty Text)
 parseLensyExp text = do
     let r = runParser lensyExpP "" text
     case r of
         Left err -> throwIO err
         Right optics -> pure optics
 
-lensyExpP :: Parser [Text]
-lensyExpP = sepBy1 opticP dotP <* eof
+lensyExpP :: Parser (NonEmpty Text)
+lensyExpP = fromList <$> sepBy1 opticP dotP <* eof
 
 opticP :: Parser Text
 opticP = takeWhile1P Nothing isLetter <* space
