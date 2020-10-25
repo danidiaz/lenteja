@@ -20,10 +20,10 @@ data Lenteja a b
   | LentejaFold (ReifiedFold a b)
 
 data SomeLentejaFrom a where
-  SomeLentejaFrom :: Show b => TypeRep b -> Lenteja a b -> SomeLentejaFrom a
+  SomeLentejaFrom :: (Show b, HasLentejas b) => TypeRep b -> Lenteja a b -> SomeLentejaFrom a
 
 data SomeLenteja where
-  SomeLenteja :: Show a => TypeRep a -> SomeLentejaFrom a -> SomeLenteja
+  SomeLenteja :: (Show a, HasLentejas b) => TypeRep a -> SomeLentejaFrom a -> SomeLenteja
 
 type HasLentejas :: Type -> Constraint
 class HasLentejas t where
