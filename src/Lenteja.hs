@@ -6,12 +6,14 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE StandaloneKindSignatures #-}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE BlockArguments #-}
 
 module Lenteja where
 
 import Control.Lens
 import Control.Lens (ReifiedFold, ReifiedLens')
 import Data.Kind (Constraint, Type)
+import Data.List.NonEmpty
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
 import Data.Text (Text)
@@ -40,9 +42,18 @@ instance HasLentejas Text where
 instance (Show a, HasLentejas a, Typeable a) => HasLentejas [a] where
   lentejas = Map.fromList [("folded", SomeLentejaFrom (typeRep @a) (LentejaFold (Fold folded)))]
 
-data OpticResult a
+data LentejaResult a
   = SingleResult a
   | MultipleResults [a]
 
-inspect :: HasLentejas a => [Text] -> a -> OpticResult String
-inspect [] = undefined
+data LentejaError = OpticNotFound Text | OpticsDon'tMatch Text Text
+
+inspect :: forall a. HasLentejas a => a -> NonEmpty Text -> Either LentejaError (LentejaResult String)
+inspect a (opticName0 :| _) =
+  case Map.lookup opticName0 (lentejas @a) of
+    Nothing ->
+      Left (OpticNotFound opticName0)
+    Just (SomeLentejaFrom rep lenteja) -> 
+      Right case lenteja of
+        LentejaLens (Lens aLens) -> _lens
+        LentejaFold (Fold aFold) -> _fold
