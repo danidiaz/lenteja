@@ -27,9 +27,6 @@ data Lenteja a b
 data SomeLentejaFrom a where
   SomeLentejaFrom :: (Show b, HasLentejas b) => Lenteja a b -> SomeLentejaFrom a
 
-data SomeLenteja where
-  SomeLenteja :: (Show a, HasLentejas b) => SomeLentejaFrom a -> SomeLenteja
-
 type HasLentejas :: Type -> Constraint
 class HasLentejas t where
   lentejas :: Map Text (SomeLentejaFrom t)
