@@ -1,45 +1,50 @@
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE ImportQualifiedPost #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE DeriveGeneric #-}
 
 module Main where
 
-import Data.Text (Text)
+import Control.Lens
+import Data.Generics.Product.Fields (field)
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
+import Data.Text (pack, Text)
 import GHC.Generics
-import Control.Lens 
-import Type.Reflection
-import Data.Generics.Product.Fields (field)
 import Lenteja
+import Type.Reflection
+import Lenteja.Parser
 
 data Person = Person
   { age :: Int,
     name :: Text,
     pets :: [Pet],
     partner :: Person
-  } deriving (Show,Generic)
+  }
+  deriving (Show, Generic)
 
 instance HasLentejas Person where
-  lentejas = Map.fromList [ 
-      ("age", SomeLentejaFrom typeRep (LentejaLens (Lens (field @"age")))),
-      ("name", SomeLentejaFrom typeRep (LentejaLens (Lens (field @"name")))),
-      -- TODO instances for [] and add the pets field
-      ("partner", SomeLentejaFrom typeRep (LentejaLens (Lens (field @"partner"))))
-    ]
+  lentejas =
+    Map.fromList
+      [ ("age", SomeLentejaFrom typeRep (LentejaLens (Lens (field @"age")))),
+        ("name", SomeLentejaFrom typeRep (LentejaLens (Lens (field @"name")))),
+        ("pets", SomeLentejaFrom typeRep (LentejaFold (Fold (field @"pets")))),
+        ("partner", SomeLentejaFrom typeRep (LentejaLens (Lens (field @"partner"))))
+      ]
 
 data Pet = Pet
   { petName :: Text,
     petAge :: Int
-  } deriving (Show,Generic)
+  }
+  deriving (Show, Generic)
 
 instance HasLentejas Pet where
-  lentejas = Map.fromList [ 
-      ("petName", SomeLentejaFrom typeRep (LentejaLens (Lens (field @"petName")))),
-      ("petAge", SomeLentejaFrom typeRep (LentejaLens (Lens (field @"petAge"))))
-    ]
+  lentejas =
+    Map.fromList
+      [ ("petName", SomeLentejaFrom typeRep (LentejaLens (Lens (field @"petName")))),
+        ("petAge", SomeLentejaFrom typeRep (LentejaLens (Lens (field @"petAge"))))
+      ]
 
 it :: Person
 it =
@@ -48,5 +53,14 @@ it =
       fido = Pet "Fido" 4
    in john
 
+repl :: IO ()
+repl = do
+  putStrLn "Enter lensy exp: "
+  line <- getLine
+  opticNames <- parseLensyExp (Data.Text.pack line)
+  putStrLn $ show $ opticNames
+  repl
+
 main :: IO ()
-main = putStrLn "Hello, Haskell!"
+main = do
+  repl

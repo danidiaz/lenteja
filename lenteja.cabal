@@ -13,12 +13,15 @@ library
     src
    exposed-modules:
     Lenteja
+    Lenteja.Parser
    build-depends:
     base >=4.14 && <4.15,
     lens,
     transformers,
     text,
-    containers
+    containers,
+    megaparsec,
+    parser-combinators
   default-language:    Haskell2010
 
 executable lenteja
@@ -30,5 +33,5 @@ executable lenteja
     text,
     containers,
     generic-lens,
-    lenteja
+    lenteja,
   default-language:    Haskell2010
