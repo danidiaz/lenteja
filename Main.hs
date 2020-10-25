@@ -7,16 +7,22 @@
 module Main where
 
 import Control.Lens
+    ( toListOf, view, ReifiedFold(Fold), ReifiedGetter(Getter) )
 import Data.Generics.Product.Fields (field)
-import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
 import Data.Text (Text, pack)
-import GHC.Generics
+import GHC.Generics ( Generic )
 import Lenteja
-import Lenteja.Parser
-import Type.Reflection
-import Control.Exception
+    ( HasLentejas(..),
+      SomeLentejaFrom(SomeLentejaFrom),
+      Lenteja(LentejaFold, LentejaGetter),
+      inspect )
+import Lenteja.Parser ( parseLensyExp )
+import Type.Reflection ( typeRep )
+import Control.Exception ( throwIO )
 import Data.Foldable (traverse_)
+import Data.Data (Proxy(Proxy))
+import Data.List.NonEmpty ( toList )
 
 data Person = Person
   { age :: Int,
@@ -29,10 +35,10 @@ data Person = Person
 instance HasLentejas Person where
   lentejas =
     Map.fromList
-      [ ("age", SomeLentejaFrom typeRep (LentejaLens (Lens (field @"age")))),
-        ("name", SomeLentejaFrom typeRep (LentejaLens (Lens (field @"name")))),
-        ("pets", SomeLentejaFrom typeRep (LentejaLens (Lens (field @"pets")))),
-        ("partner", SomeLentejaFrom typeRep (LentejaLens (Lens (field @"partner"))))
+      [ ("age", SomeLentejaFrom typeRep (LentejaGetter (Getter (field @"age")))),
+        ("name", SomeLentejaFrom typeRep (LentejaGetter (Getter (field @"name")))),
+        ("pets", SomeLentejaFrom typeRep (LentejaGetter (Getter (field @"pets")))),
+        ("partner", SomeLentejaFrom typeRep (LentejaGetter (Getter (field @"partner"))))
       ]
 
 data Pet = Pet
@@ -44,8 +50,8 @@ data Pet = Pet
 instance HasLentejas Pet where
   lentejas =
     Map.fromList
-      [ ("petName", SomeLentejaFrom typeRep (LentejaLens (Lens (field @"petName")))),
-        ("petAge", SomeLentejaFrom typeRep (LentejaLens (Lens (field @"petAge"))))
+      [ ("petName", SomeLentejaFrom typeRep (LentejaGetter (Getter (field @"petName")))),
+        ("petAge", SomeLentejaFrom typeRep (LentejaGetter (Getter (field @"petAge"))))
       ]
 
 it :: Person
@@ -61,14 +67,16 @@ repl = do
   putStrLn "Enter lensy exp: "
   line <- getLine
   opticNames <- parseLensyExp (Data.Text.pack line)
-  case inspect it opticNames of
+  case inspect (Proxy @Person) (toList opticNames) of
     Left error -> throwIO error
-    Right (SingleResult result) -> 
-      do putStrLn "A single result:"
+    Right (LentejaGetter (Getter lenteja)) -> 
+      do let result = view lenteja it
+         putStrLn "A single result:"
          putStrLn result
-    Right (MultipleResults results) -> 
-      do putStrLn "Multiple results:"
-         traverse_ putStrLn results
+    Right (LentejaFold (Fold lenteja)) -> 
+      do let result = toListOf lenteja it
+         putStrLn "Multiple results:"
+         traverse_ putStrLn result
   repl
 
 main :: IO ()

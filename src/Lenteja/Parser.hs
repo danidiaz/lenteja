@@ -9,15 +9,16 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Lenteja.Parser where
 
-import Lenteja
+import Lenteja ()
 import Text.Megaparsec
-import Text.Megaparsec.Char
+    ( runParser, sepBy1, Parsec, MonadParsec(takeWhile1P, eof) )
+import Text.Megaparsec.Char ( space )
 import Text.Megaparsec.Char.Lexer qualified as L
-import Data.Void
+import Data.Void ( Void )
 import Data.Text (Text)
 import Control.Exception (throwIO)
-import Data.Char
-import Data.List.NonEmpty
+import Data.Char ( isLetter )
+import Data.List.NonEmpty ( NonEmpty, fromList )
 
 type Parser = Parsec Void Text
 

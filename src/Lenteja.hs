@@ -11,18 +11,18 @@
 
 module Lenteja where
 
-import Control.Exception
+import Control.Exception ( Exception )
 import Control.Lens
-import Control.Lens (ReifiedFold, ReifiedLens')
+    ( folded, to, ReifiedFold(Fold), ReifiedGetter(Getter) )
 import Data.Kind (Constraint, Type)
-import Data.List.NonEmpty
+import Data.List.NonEmpty ()
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
 import Data.Text (Text)
-import Type.Reflection
+import Type.Reflection ( Typeable, TypeRep, typeRep )
 
 data Lenteja a b
-  = LentejaLens (ReifiedLens' a b)
+  = LentejaGetter (ReifiedGetter a b)
   | LentejaFold (ReifiedFold a b)
 
 data SomeLentejaFrom a where
@@ -49,20 +49,28 @@ data LentejaResult a
   | MultipleResults [a]
   deriving (Functor)
 
-data LentejaError = OpticNotFound Text | OpticsDon'tMatch Text Text deriving (Show)
+data LentejaError = OpticNotFound Text deriving (Show)
 
 instance Exception LentejaError
 
-inspect :: forall a. HasLentejas a => a -> NonEmpty Text -> Either LentejaError (LentejaResult String)
-inspect a (opticName0 :| _) =
-  case Map.lookup opticName0 (lentejas @a) of
+inspect :: forall a proxy. (HasLentejas a, Show a) => proxy a -> [Text] -> Either LentejaError (Lenteja a String)
+inspect _ [] = Right (LentejaGetter (Getter (to show)))
+inspect _ (opticName : names) =
+  case Map.lookup opticName (lentejas @a) of
     Nothing ->
-      Left (OpticNotFound opticName0)
+      Left (OpticNotFound opticName)
     Just (SomeLentejaFrom rep lenteja) ->
-      let result =
-            case lenteja of
-              LentejaLens (Lens aLens) ->
-                SingleResult (view aLens a)
-              LentejaFold (Fold aFold) ->
-                MultipleResults (toListOf aFold a)
-       in Right (show <$> result)
+      case inspect lenteja names of
+        Left err -> 
+          Left err
+        Right restLenteja ->
+          Right case (lenteja, restLenteja) of
+            (LentejaGetter (Getter current), LentejaGetter (Getter rest)) -> 
+              LentejaGetter (Getter (current . rest))
+            (LentejaGetter (Getter current), LentejaFold (Fold rest)) -> 
+              LentejaFold (Fold (current . rest))
+            (LentejaFold (Fold current), LentejaGetter (Getter rest)) -> 
+              LentejaFold (Fold (current . rest))
+            (LentejaFold (Fold current), LentejaFold (Fold rest)) -> 
+              LentejaFold (Fold (current . rest))
+              
