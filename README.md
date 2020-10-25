@@ -4,7 +4,7 @@
 
 Suppose you have a strongly-typed Haskell data structure, and you want to explore and dig into it using lensy-like expressions entered interactively at runtime.
 
-The program would have to parse the lensy-like expressions and assemble an optic from them, but how? What would it be required? Ain't that too much dynamicity for Haskell?
+The program would have to parse the lensy-like expressions and assemble an optic from them, but how? What would be required? Ain't that too much dynamicity for Haskell?
 
 This repo is a minimal proof-of-concept.
 
