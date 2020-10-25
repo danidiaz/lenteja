@@ -1,4 +1,6 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE BlockArguments #-}
+{-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE GADTSyntax #-}
 {-# LANGUAGE ImportQualifiedPost #-}
@@ -6,10 +8,10 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE StandaloneKindSignatures #-}
 {-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE BlockArguments #-}
 
 module Lenteja where
 
+import Control.Exception
 import Control.Lens
 import Control.Lens (ReifiedFold, ReifiedLens')
 import Data.Kind (Constraint, Type)
@@ -45,15 +47,22 @@ instance (Show a, HasLentejas a, Typeable a) => HasLentejas [a] where
 data LentejaResult a
   = SingleResult a
   | MultipleResults [a]
+  deriving (Functor)
 
-data LentejaError = OpticNotFound Text | OpticsDon'tMatch Text Text
+data LentejaError = OpticNotFound Text | OpticsDon'tMatch Text Text deriving (Show)
+
+instance Exception LentejaError
 
 inspect :: forall a. HasLentejas a => a -> NonEmpty Text -> Either LentejaError (LentejaResult String)
 inspect a (opticName0 :| _) =
   case Map.lookup opticName0 (lentejas @a) of
     Nothing ->
       Left (OpticNotFound opticName0)
-    Just (SomeLentejaFrom rep lenteja) -> 
-      Right case lenteja of
-        LentejaLens (Lens aLens) -> _lens
-        LentejaFold (Fold aFold) -> _fold
+    Just (SomeLentejaFrom rep lenteja) ->
+      let result =
+            case lenteja of
+              LentejaLens (Lens aLens) ->
+                SingleResult (view aLens a)
+              LentejaFold (Fold aFold) ->
+                MultipleResults (toListOf aFold a)
+       in Right (show <$> result)
