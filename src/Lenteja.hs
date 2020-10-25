@@ -1,19 +1,21 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE GADTSyntax #-}
 {-# LANGUAGE ImportQualifiedPost #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE StandaloneKindSignatures #-}
-{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Lenteja where
 
-import Control.Lens ( ReifiedLens', ReifiedFold )
+import Control.Lens (ReifiedFold, ReifiedLens')
+import Data.Kind (Constraint, Type)
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
 import Data.Text (Text)
-import Type.Reflection ( TypeRep )
-import Data.Kind ( Type, Constraint )
+import Type.Reflection 
+import Control.Lens
 
 data Lenteja a b
   = LentejaLens (ReifiedLens' a b)
@@ -34,3 +36,8 @@ instance HasLentejas Int where
 
 instance HasLentejas Text where
   lentejas = Map.empty
+
+instance (Show a, HasLentejas a, Typeable a) => HasLentejas [a] where
+  lentejas = Map.fromList [("folded", SomeLentejaFrom (typeRep @a) (LentejaFold (Fold folded)))]
+
+
